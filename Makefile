@@ -24,13 +24,21 @@
 #
 
 CC=cc
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall -I.
 
-tiff_metadata: tiff_metadata.o
-	$(CC) tiff_metadata.o -o tiff_metadata
+tiff_metadata: tiff_metadata.o main.o
+	$(CC) tiff_metadata.o main.o -o tiff_metadata
 
-tiff_metadata.o: tiff_metadata.c
+tiff_metadata.o: tiff_metadata.c tiff_metadata.h
 	$(CC) $(CFLAGS) tiff_metadata.c
+
+main.o: main.c tiff_metadata.h
+	$(CC) $(CFLAGS) main.c
+
+test: test.o tiff_metadata.o
+
+test.o: test.c tiff_metadata.h
+	$(CC) $(CFLAGS) test.c
 
 clean:
 	rm *.o
