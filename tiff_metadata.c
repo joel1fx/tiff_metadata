@@ -33,91 +33,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-
-
-# define TIFF_MAGIC 42
-
-
-/**                                                                      **/
-/**  TIFF Image File Header                                              **/
-/**                                                                      **/
-
-struct tiffImageFileHeader
-{
-	unsigned short byteOrder;
-	unsigned short magic;
-	unsigned int ifd_offset;
-};
-
-
-/**                                                                      **/
-/**  TIFF Image File Directory (IFD) entry (i.e. metadata item)          **/
-/**                                                                      **/
-
-struct tiffIFDEntry
-{
-	unsigned short tag;
-	unsigned short fieldType;
-	unsigned int count;
-	unsigned int valueOffset;
-};
-
-
-/**                                                                      **/
-/**  Internal image structure for better parameter passing               **/
-/**                                                                      **/
-/**  machineEndian                                                       **/
-/**      defines machine architecture. 1 == little endian                **/
-/**                                    0 == big_endian                   **/
-/**      for more info http://en.wikipedia.org/wiki/Endianness           **/
-/**  fileEndian                                                          **/
-/**      defines file architecture. 1 == little endian                   **/
-/**                                 0 == big_endian                      **/
-/**  exifHeader                                                          **/
-/**      defines whether this IFD is an Exif IFD                         **/
-/**  exifIFDOffset                                                       **/
-/**      offset of Exif IFD from file start                              **/
-/**  tiffOffset                                                          **/
-/**      offset of TIFF file header from file start                      **/
-/**  tiffIFDOffset                                                       **/
-/**      offset of TIFF IFD from file start                              **/
-/**                                                                      **/
-
-typedef struct internalStruct
-{
-	int machineEndian;
-	int fileEndian;
-	long tiffOffset;
-	unsigned int tiffIFDOffset;
-	int exifHeader;
-	unsigned int exifIFDOffset;
-} internalStruct;
-
-
-/**                                                                      **/
-/**  Utility structure for conversion from raw bytes to chars, ints,     **/
-/**  floats, etc.                                                        **/
-/**                                                                      **/
-
-typedef union byte4
-{
-	char b[4];
-	int i;
-	unsigned int u;
-	unsigned short s;
-	float f;
-} byte4;
-
-
-/**                                                                      **/
-/**  TIFF tag and description string structure                           **/
-/**                                                                      **/
-
-typedef struct tagString
-{
-	int tag;
-	char *string;
-} tagString;
+#include "tiff_metadata.h"
 
 
 /**                                                                      **/
@@ -1365,14 +1281,6 @@ int tiffMetadataPrint(char *filename)
 	{
 		printf("JPEG file\n");
 
-		internal.tiffOffset = 2;
-		while( (buffer[internal.tiffOffset] == 0xff) &&
-			(buffer[internal.tiffOffset + 1] == 0xe1) )
-		{
-		}
-		else
-		{
-		}
 		if( (buffer[2] == 0xff) && (buffer[3] == 0xe1) &&
 			(buffer[6] == 'E') && (buffer[7] == 'x') &&
 			(buffer[8] == 'i') && (buffer[9] == 'f') )
@@ -1447,29 +1355,4 @@ int tiffMetadataPrint(char *filename)
 	return 0;
 }
 
-
-/**                                                                      **/
-/**   Function: main.                                                    **/
-/**                                                                      **/
-/**   Program main function.                                             **/
-/**                                                                      **/
-/**   Usage:                                                             **/
-/**   tiff_metadata tiffFile                                             **/
-/**                                                                      **/
-/**   Input parameters:                                                  **/
-/**   argc       -- argument count                                       **/
-/**   argv       -- argument vector                                      **/
-/**                                                                      **/
-
-int main(int argc, char *argv[])
-{
-	if(argc < 2)
-	{
-		fprintf(stderr, "usage: %s tiffFile\n", argv[0]);
-
-		return 1;
-	}
-
-	return tiffMetadataPrint(argv[1]);
-}
 
