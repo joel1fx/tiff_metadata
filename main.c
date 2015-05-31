@@ -28,14 +28,20 @@ SOFTWARE.
 /**                                                                      **/
 /**   http://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf       **/
 /**                                                                      **/
+/**   The Exif file format specifcations are available at                **/
+/**                                                                      **/
+/**   http://www.exiv2.org/Exif2-2.PDF                                   **/
+/**   http://www.cipa.jp/std/documents/e/DC-008-2012_E.pdf               **/
+/**                                                                      **/
+
+
+#define MAIN
 
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
 #include "tiff_metadata.h"
-
-extern int tiffMetadataPrint(char *filename);
 
 /**                                                                      **/
 /**   Function: main.                                                    **/
