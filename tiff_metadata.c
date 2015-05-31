@@ -28,6 +28,12 @@ SOFTWARE.
 /**                                                                      **/
 /**   http://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf       **/
 /**                                                                      **/
+/**   The Exif file format specifcations are available at                **/
+/**                                                                      **/
+/**   http://www.exiv2.org/Exif2-2.PDF                                   **/
+/**   http://www.cipa.jp/std/documents/e/DC-008-2012_E.pdf               **/
+/**                                                                      **/
+
 
 #include <string.h>
 #include <stdlib.h>
@@ -302,6 +308,7 @@ void getTagDescriptor(char *buffer, unsigned short tag)
 		{ 37384, "LightSource" },
 		{ 37385, "Flash" },
 		{ 37386, "FocalLength" },
+		{ 37396, "SubjectArea" },
 		{ 37500, "MakerNote" },
 		{ 37510, "UserComment" },
 		{ 37520, "SubSecTime" },
@@ -330,7 +337,18 @@ void getTagDescriptor(char *buffer, unsigned short tag)
 		{ 41989, "FocalLengthIn35mmFilm" },
 		{ 41990, "SceneCaptureType" },
 		{ 41991, "GainControl" },
+		{ 41992, "Contrast" },
+		{ 41993, "Saturation" },
+		{ 41994, "Sharpness" },
+		{ 41995, "DeviceSettingDescription" },
+		{ 41996, "SubjectDistanceRange" },
 		{ 42016, "ImageUniqueID" },
+		{ 42032, "CameraOwnerName" },
+		{ 42033, "BodySerialNumber" },
+		{ 42034, "LensSpecification" },
+		{ 42035, "LensMake" },
+		{ 42036, "LensModel" },
+		{ 42037, "LensSerialNumber" },
 		{ -1, "" }  /* End of array element.  Do not delete. */
 		};
 
