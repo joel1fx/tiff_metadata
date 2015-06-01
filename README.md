@@ -7,6 +7,9 @@ Dumps the metadata of a TIFF file
 A useful utility for checking all metadata in TIFF files. (Also works
 for some JPEG files that use Exif.)
 
+## Github page
+http://joel1fx.github.io/tiff_metadata/
+
 ## Installation
 
 Download the repo and
