@@ -41,6 +41,46 @@ SOFTWARE.
 #include <stdio.h>
 #include "tiff_metadata.h"
 
+typedef enum {
+	FT_UNKNOWN = 0,
+	FT_BYTE,
+	FT_ASCII,
+	FT_SHORT,
+	FT_LONG,
+	FT_RATIONAL,
+	FT_SBYTE,
+	FT_UNDEFINED,
+	FT_SSHORT,
+	FT_SLONG,
+	FT_SRATIONAL,
+	FT_FLOAT,
+	FT_DOUBLE,
+	FT_MIN = FT_BYTE,
+	FT_MAX = FT_DOUBLE,
+} fieldType_t;
+
+typedef struct {
+	fieldType_t type;
+	const char *desc;
+	size_t numBytes;
+} fieldTypeData_t;
+
+static const fieldTypeData_t fieldTypeLookup[] = {
+	{ FT_BYTE, "BYTE", 1, },
+	{ FT_ASCII, "ASCII", 1, },
+	{ FT_SHORT, "SHORT", 2, },
+	{ FT_LONG, "LONG", 4, },
+	{ FT_RATIONAL, "RATIONAL", 8, },
+	{ FT_SBYTE, "SBYTE", 1, },
+	{ FT_UNDEFINED, "UNDEFINED", 1, },
+	{ FT_SSHORT, "SSHORT", 2, },
+	{ FT_SLONG, "SLONG", 4, },
+	{ FT_SRATIONAL, "SRATIONAL", 8, },
+	{ FT_FLOAT, "FLOAT", 4, },
+	{ FT_DOUBLE, "DOUBLE", 8, },
+};
+
+#define	N_ELEMENTS(a)	(sizeof(a) / sizeof(*a))
 
 /**                                                                      **/
 /**   Function: detectMachineEndian                                      **/
@@ -199,20 +239,19 @@ float cSwapFloat(float a, const internalStruct *internal)
 /**                                                                      **/
 /**   Function: getTagDescriptor                                         **/
 /**                                                                      **/
-/**   Copy the Tag descriptor of the given tag number into the given     **/
-/**   buffer, or "unknown" if unknown Tag descriptor.                    **/
+/**   Return a pointer to a constant string description of the supplied  **/
+/**   Tag descriptor.                                                    **/
 /**                                                                      **/
 /**   Input parameters:                                                  **/
-/**   buffer  -- buffer to which to copy Tag descriptor                  **/
 /**   tag     -- tag number                                              **/
 /**                                                                      **/
 /**                                                                      **/
 
-void getTagDescriptor(char *buffer, unsigned short tag)
+const char *getTagDescriptor(unsigned short tag)
 {
-	int i;
-	int match;
-	tagString desc[] = {
+	unsigned int i;
+	const char *str = "unknown";
+	const tagString desc[] = {
 		{ 254, "NewSubfileType" },
 		{ 255, "SubfileType" },
 		{ 256, "ImageWidth" },
@@ -349,71 +388,64 @@ void getTagDescriptor(char *buffer, unsigned short tag)
 		{ 42035, "LensMake" },
 		{ 42036, "LensModel" },
 		{ 42037, "LensSerialNumber" },
-		{ -1, "" }  /* End of array element.  Do not delete. */
 		};
-
-	match = 0;
 
 	/* TODO: Add more efficient search algorithm. */
 
-	for(i = 0;desc[i].tag != -1;i++)
+	for(i = 0; i < N_ELEMENTS(desc); i++)
 	{
 		if(desc[i].tag == (int)tag)
 		{
-			strcpy(buffer, desc[i].string);
-			match = 1;
+			str = desc[i].string;
 			break;
 		}
 	}
-	if(match == 0)
-	{
-		strcpy(buffer, "unknown");
-	}
 
-	return;
+	return str;
 }
 
 
 /**                                                                      **/
 /**   Function: getTIFFValueDesc                                         **/
 /**                                                                      **/
-/**   Copy the Value descriptor of the given tag and possibly value      **/
-/**   numbers and into the given buffer, or "unknown" if unknown Tag     **/
+/**   Return a pointer to a string describing the Value of the given tag **/
+/**   descriptor and possibly value numbers, or "unknown" if unknown Tag **/
 /**   descriptor.                                                        **/
 /**                                                                      **/
 /**   Input parameters:                                                  **/
-/**   buffer  -- buffer to which to copy Tag descriptor                  **/
 /**   tag     -- tag number                                              **/
 /**   value   -- value number                                            **/
 /**                                                                      **/
 
-void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
+const char *getTIFFValueDesc(unsigned short tag, unsigned int value)
 {
+	const char *str = "unknown";
+
 	/* TODO: Organize the buffer lookup in a less naive way. Note  */
 	/* that any improvement would need to account both for buffers */
 	/* affected only by the tag and buffers affected by both the   */
-        /* tag and value.                                              */
+	/* tag and value.                                              */
 
 	switch(tag)
 	{
 		case 254: /* NewSubfileType */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 256: /* ImageWidth */
 		{
-			strcpy(buffer, "pixels");
+			str = "pixels";
 			break;
 		}
 		case 257: /* ImageLength */
 		{
-			strcpy(buffer, "pixels");
+			str = "pixels";
 			break;
 		}
 		case 258: /* BitsPerSample */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 259: /* Compression */
@@ -422,28 +454,27 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "No compression");
+					str = "No compression";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer,
-						"CCITT Group 3 compression");
+					str = "CCITT Group 3 compression";
 					break;
 				}
 				case 5:
 				{
-					strcpy(buffer, "LZW compression");
+					str = "LZW compression";
 					break;
 				}
 				case 32773:
 				{
-					strcpy(buffer, "PackBits compression");
+					str = "PackBits compression";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -455,32 +486,32 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 0:
 				{
-					strcpy(buffer, "WhiteIsZero");
+					str = "WhiteIsZero";
 					break;
 				}
 				case 1:
 				{
-					strcpy(buffer, "BlackIsZero");
+					str = "BlackIsZero";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "RGB");
+					str = "RGB";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer, "Palette color");
+					str = "Palette color";
 					break;
 				}
 				case 4:
 				{
-					strcpy(buffer, "Transparency mask");
+					str = "Transparency mask";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -488,7 +519,7 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 		}
 		case 273: /* StripOffsets */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 274: /* Orientation */
@@ -497,51 +528,47 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "Row0:top,Col0:left");
+					str = "Row0:top,Col0:left";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Row0:top,Col0:right");
+					str = "Row0:top,Col0:right";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer,
-						"Row0:bottom,Col0:right");
+					str = "Row0:bottom,Col0:right";
 					break;
 				}
 				case 4:
 				{
-					strcpy(buffer,
-						"Row0:bottom,Col0:left");
+					str = "Row0:bottom,Col0:left";
 					break;
 				}
 				case 5:
 				{
-					strcpy(buffer, "Row0:left,Col0:top");
+					str = "Row0:left,Col0:top";
 					break;
 				}
 				case 6:
 				{
-					strcpy(buffer, "Row0:right,Col0:top");
+					str = "Row0:right,Col0:top";
 					break;
 				}
 				case 7:
 				{
-					strcpy(buffer,
-						"Row0:right,Col0:bottom");
+					str = "Row0:right,Col0:bottom";
 					break;
 				}
 				case 8:
 				{
-					strcpy(buffer,
-						"Row0:left,Col0:bottom");
+					str = "Row0:left,Col0:bottom";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -549,17 +576,17 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 		}
 		case 277: /* SamplesPerPixel */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 278: /* RowsPerStrip */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 279: /* StripByteCounts */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 284: /* PlanarConfiguration */
@@ -568,17 +595,17 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "Chunky");
+					str = "Chunky";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Planar");
+					str = "Planar";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -590,22 +617,22 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "No absolute unit");
+					str = "No absolute unit";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Inch");
+					str = "Inch";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer, "Centimeter");
+					str = "Centimeter";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -613,7 +640,7 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 		}
 		case 305: /* Software */
 		{
-			strcpy(buffer, "");
+			str = "";
 			break;
 		}
 		case 317: /* Predictor */
@@ -622,18 +649,17 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "No prediction scheme");
+					str = "No prediction scheme";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer,
-						"Horizontal differencing");
+					str = "Horizontal differencing";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -645,31 +671,27 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer,
-						"Unsigned integer data");
+					str = "Unsigned integer data";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Two's compliment "
-						"signed integer data");
+					str = "Two's compliment signed integer data";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer, "IEEE floating point "
-						"data");
+					str = "IEEE floating point data";
 					break;
 				}
 				case 4:
 				{
-					strcpy(buffer,
-						"Undefined data format");
+					str = "Undefined data format";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -677,7 +699,7 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 		}
 		case 33434: /* Exif ExposureTime */
 		{
-			strcpy(buffer, "seconds");
+			str = "seconds";
 			break;
 		}
 		case 34850: /* Exif ExposureProgram */
@@ -686,52 +708,52 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 0:
 				{
-					strcpy(buffer, "Not defined");
+					str = "Not defined";
 					break;
 				}
 				case 1:
 				{
-					strcpy(buffer, "Manual");
+					str = "Manual";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Normal program");
+					str = "Normal program";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer, "Aperture priority");
+					str = "Aperture priority";
 					break;
 				}
 				case 4:
 				{
-					strcpy(buffer, "Shutter priority");
+					str = "Shutter priority";
 					break;
 				}
 				case 5:
 				{
-					strcpy(buffer, "Creative program");
+					str = "Creative program";
 					break;
 				}
 				case 6:
 				{
-					strcpy(buffer, "Action program");
+					str = "Action program";
 					break;
 				}
 				case 7:
 				{
-					strcpy(buffer, "Portrait mode");
+					str = "Portrait mode";
 					break;
 				}
 				case 8:
 				{
-					strcpy(buffer, "Landscape mode");
+					str = "Landscape mode";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
@@ -743,33 +765,32 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 			{
 				case 1:
 				{
-					strcpy(buffer, "No absolute unit");
+					str = "No absolute unit";
 					break;
 				}
 				case 2:
 				{
-					strcpy(buffer, "Inch");
+					str = "Inch";
 					break;
 				}
 				case 3:
 				{
-					strcpy(buffer, "Centimeter");
+					str = "Centimeter";
 					break;
 				}
 				default:
 				{
-					strcpy(buffer, "");
+					str = "";
 					break;
 				}
 			}
 			break;
 		}
 		default:
-		{
-			strcpy(buffer, "unknown");
 			break;
-		}
 	}
+
+	return str;
 }
 
 
@@ -784,49 +805,52 @@ void getTIFFValueDesc(char *buffer, unsigned short tag, unsigned int value)
 /**                 entry.                                               **/
 /**                                                                      **/
 
-int getFieldTypeNumBytes(unsigned short fieldType)
+size_t getFieldTypeNumBytes(fieldType_t fieldType)
 {
-	int numBytes[] = { 1, 1, 2, 4, 8, 1, 1, 2, 4, 8, 4, 8 };
+	size_t num = 0;
+	unsigned int i;
+	const fieldTypeData_t *p;
 
-	if( (fieldType >= 1) && (fieldType <= 12) )
+	for (i = 0, p = fieldTypeLookup; i < N_ELEMENTS(fieldTypeLookup); i++, p++)
 	{
-		return numBytes[fieldType - 1];
+		if (fieldType == p->type)
+		{
+			num = p->numBytes;
+			break;
+		}
 	}
-	else
-	{
-		return 0;
-	}
+
+	return num;
 }
 
 
 /**                                                                      **/
 /**   Function: getTIFFTypeDesc                                          **/
 /**                                                                      **/
-/**   Copy the name of the given Type of an Image File Directory (IFD)   **/
-/**   entry into the given buffer.                                       **/
+/**   Return a pointer to a string describing the given Type of an Image **/
+/**   File Directory (IFD) entry.                                        **/
 /**                                                                      **/
 /**   Input parameters:                                                  **/
-/**   buffer     -- buffer to which to copy name                         **/
 /**   fieldType  -- the Type number of an Image File Directory (IFD)     **/
 /**                 entry.                                               **/
 /**                                                                      **/
 
-void getTIFFTypeDesc(char *buffer, unsigned short fieldType)
+const char *getTIFFTypeDesc(fieldType_t fieldType)
 {
-	char *typeDesc[] = { "BYTE", "ASCII", "SHORT", "LONG", "RATIONAL",
-		"SBYTE", "UNDEFINED", "SSHORT", "SLONG", "SRATIONAL",
-		"FLOAT", "DOUBLE" };
+	const char *str = "unknown";
+	unsigned int i;
+	const fieldTypeData_t *p;
 
-	if( (fieldType >= 1) && (fieldType <= 12) )
+	for (i = 0, p = fieldTypeLookup; i < N_ELEMENTS(fieldTypeLookup); i++, p++)
 	{
-		strcpy(buffer, typeDesc[fieldType - 1]);
-	}
-	else
-	{
-		strcpy(buffer, "unknown");
+		if (fieldType == p->type)
+		{
+			str = p->desc;
+			break;
+		}
 	}
 
-	return;
+	return str;
 }
 
 
@@ -845,18 +869,18 @@ void getTIFFTypeDesc(char *buffer, unsigned short fieldType)
 /**                 machineEndian and fileEndian fields                  **/
 /**                                                                      **/
 
-void printEntry(unsigned char *buffer, unsigned short tag,
-	unsigned short fieldType, const internalStruct *internal)
+void printEntry(const unsigned char *buffer, unsigned short tag,
+	fieldType_t fieldType, const internalStruct *internal)
 {
 	byte4 tmp;
-	char buffer2[1024];
+	const char *desc;
 	unsigned int numerator, denominator;
 	int snumerator, sdenominator;
 	double result;
 
 	switch(fieldType)
 	{
-		case 2: /* ASCII */
+		case FT_ASCII:
 		{
 			if( (buffer[0] > 31) && (buffer[0] < 128) )
 			{
@@ -869,19 +893,19 @@ void printEntry(unsigned char *buffer, unsigned short tag,
 
 			break;
 		}
-		case 3: /* SHORT */
+		case FT_SHORT:
 		{
 			tmp.b[0] = buffer[0];
 			tmp.b[1] = buffer[1];
 
 			tmp.s = cSwapUShort(tmp.s, internal);
 
-			getTIFFValueDesc(buffer2, tag, (unsigned int)tmp.s);
-			printf("Value %d %s\n", tmp.s, buffer2);
+			desc = getTIFFValueDesc(tag, (unsigned int)tmp.s);
+			printf("Value %d %s\n", tmp.s, desc);
 
 			break;
 		}
-		case 4: /* LONG */
+		case FT_LONG:
 		{
 			tmp.b[0] = buffer[0];
 			tmp.b[1] = buffer[1];
@@ -890,12 +914,12 @@ void printEntry(unsigned char *buffer, unsigned short tag,
 
 			tmp.u = cSwapUInt(tmp.u, internal);
 
-			getTIFFValueDesc(buffer2, tag, tmp.u);
-			printf("Value %d %s\n", tmp.u, buffer2);
+			desc = getTIFFValueDesc(tag, tmp.u);
+			printf("Value %d %s\n", tmp.u, desc);
 
 			break;
 		}
-		case 5: /* RATIONAL */
+		case FT_RATIONAL:
 		{
 			tmp.b[0] = buffer[0];
 			tmp.b[1] = buffer[1];
@@ -915,7 +939,7 @@ void printEntry(unsigned char *buffer, unsigned short tag,
 
 			break;
 		}
-		case 10: /* SRATIONAL */
+		case FT_SRATIONAL:
 		{
 			tmp.b[0] = buffer[0];
 			tmp.b[1] = buffer[1];
@@ -957,7 +981,7 @@ void printEntry(unsigned char *buffer, unsigned short tag,
 /**   count   -- number of bytes to dump                                 **/
 /**                                                                      **/
 
-void printDump(unsigned char *buffer, int count)
+void printDump(const unsigned char *buffer, int count)
 {
 	int i, j;
 	int i2;
@@ -1032,7 +1056,7 @@ void printDump(unsigned char *buffer, int count)
 /**                                                                      **/
 
 void getOffsetValues(FILE *file, unsigned short tag,
-	unsigned short fieldType, unsigned int count,
+	fieldType_t fieldType, unsigned int count,
 	unsigned int valueOffset, const internalStruct *internal)
 {
 	int i;
@@ -1044,7 +1068,7 @@ void getOffsetValues(FILE *file, unsigned short tag,
 
 	fseek(file, (int)(valueOffset + internal->tiffOffset), SEEK_SET);
 
-	if(fieldType == 2) /* ASCII */
+	if(fieldType == FT_ASCII)
 	{
 		buffer = (unsigned char *)malloc(count);
 		if(buffer == NULL)
@@ -1059,7 +1083,7 @@ void getOffsetValues(FILE *file, unsigned short tag,
 		}
 		printf("\t  String \"%s\"\n", buffer);
 	}
-	else if(fieldType == 7) /* UNDEFINED */
+	else if(fieldType == FT_UNDEFINED)
 	{
 		buffer = (unsigned char *)malloc(count);
 		if(buffer == NULL)
@@ -1118,13 +1142,13 @@ void getOffsetValues(FILE *file, unsigned short tag,
 /**               fileEndian field                                       **/
 /**                                                                      **/
 
-void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
+void tiffIFDPrint(const char *filename, FILE *file, internalStruct *internal)
 {
 	int i;
 	unsigned short tiffIFDEntries;
 	struct tiffIFDEntry ifd_entry;
 	int total_bytes;
-	char buffer[1024];
+	const char *desc;
 	unsigned int value;
 	byte4 tmp;
 
@@ -1155,14 +1179,14 @@ void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
 				exit(1);
 			}
 			ifd_entry.tag = cSwapUShort(ifd_entry.tag, internal);
-			getTagDescriptor(buffer, ifd_entry.tag);
+			desc = getTagDescriptor(ifd_entry.tag);
 			printf("\tTag %d  (%04X.H)   %s\n", ifd_entry.tag,
-				ifd_entry.tag, buffer);
+				ifd_entry.tag, desc);
 			ifd_entry.fieldType = cSwapUShort(ifd_entry.fieldType,
 				internal);
 
-			getTIFFTypeDesc(buffer, ifd_entry.fieldType);
-			printf("\tType %d %s\n", ifd_entry.fieldType, buffer);
+			desc = getTIFFTypeDesc(ifd_entry.fieldType);
+			printf("\tType %d %s\n", ifd_entry.fieldType, desc);
 
 			ifd_entry.count = cSwapUInt(ifd_entry.count, internal);
 			printf("\tCount %d\n", ifd_entry.count);
@@ -1183,12 +1207,12 @@ void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
 			else
 			{
 				tmp.u = ifd_entry.valueOffset;
-				if(ifd_entry.fieldType == 3) /* SHORT */
+				if(ifd_entry.fieldType == FT_SHORT)
 				{
 					value = (unsigned int)
 						cSwapUShort(tmp.s, internal);
 				}
-				else if(ifd_entry.fieldType == 4) /* LONG */
+				else if(ifd_entry.fieldType == FT_LONG)
 				{
 					value = cSwapUInt(
 						ifd_entry.valueOffset,
@@ -1200,7 +1224,7 @@ void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
 							value;
 					}
 				}
-				else if(ifd_entry.fieldType == 7) /* UNDEF */
+				else if(ifd_entry.fieldType == FT_UNDEFINED)
 				{
 					printDump( (unsigned char *)tmp.b,
 						total_bytes);
@@ -1210,13 +1234,13 @@ void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
 					value = cSwapUInt(tmp.u, internal);
 				}
 
-				if(ifd_entry.fieldType != 7)
+				if(ifd_entry.fieldType != FT_UNDEFINED)
 				{
-					getTIFFValueDesc(buffer,
+					desc = getTIFFValueDesc(
 						ifd_entry.tag,
 						value);
 					printf("\tValue %d %s\n", value,
-						buffer);
+						desc);
 				}
 			}
 
@@ -1259,7 +1283,7 @@ void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal)
 /**   filename  -- file name                                             **/
 /**                                                                      **/
 
-int tiffMetadataPrint(char *filename)
+int tiffMetadataPrint(const char *filename)
 {
 	FILE *file;
 	struct tiffImageFileHeader tiff_hdr;
@@ -1372,5 +1396,3 @@ int tiffMetadataPrint(char *filename)
 
 	return 0;
 }
-
-
