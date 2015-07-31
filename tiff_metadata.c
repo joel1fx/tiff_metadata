@@ -81,7 +81,7 @@ int detectMachineEndian(void)
 /**                  (1 == little endian 0 == big_endian)                **/
 /**                                                                      **/
 
-unsigned short cSwapUShort(unsigned short a, struct internalStruct *internal)
+unsigned short cSwapUShort(unsigned short a, const internalStruct *internal)
 {
 	int swapBytes;
 
@@ -110,7 +110,7 @@ unsigned short cSwapUShort(unsigned short a, struct internalStruct *internal)
 /**                machineEndian and fileEndian fields                   **/
 /**                                                                      **/
 
-unsigned int cSwapUInt(unsigned int a, internalStruct *internal)
+unsigned int cSwapUInt(unsigned int a, const internalStruct *internal)
 {
 	int swapBytes;
 
@@ -140,7 +140,7 @@ unsigned int cSwapUInt(unsigned int a, internalStruct *internal)
 /**                  machineEndian and fileEndian fields                 **/
 /**                                                                      **/
 
-int cSwapInt(int a, internalStruct *internal)
+int cSwapInt(int a, const internalStruct *internal)
 {
 	int swapBytes;
 	byte4 tmp;
@@ -174,7 +174,7 @@ int cSwapInt(int a, internalStruct *internal)
 /**                  machineEndian and fileEndian fields                 **/
 /**                                                                      **/
 
-float cSwapFloat(float a, internalStruct *internal)
+float cSwapFloat(float a, const internalStruct *internal)
 {
 	int swapBytes;
 	byte4 tmp;
@@ -846,7 +846,7 @@ void getTIFFTypeDesc(char *buffer, unsigned short fieldType)
 /**                                                                      **/
 
 void printEntry(unsigned char *buffer, unsigned short tag,
-	unsigned short fieldType, internalStruct *internal)
+	unsigned short fieldType, const internalStruct *internal)
 {
 	byte4 tmp;
 	char buffer2[1024];
@@ -1033,7 +1033,7 @@ void printDump(unsigned char *buffer, int count)
 
 void getOffsetValues(FILE *file, unsigned short tag,
 	unsigned short fieldType, unsigned int count,
-	unsigned int valueOffset, internalStruct *internal)
+	unsigned int valueOffset, const internalStruct *internal)
 {
 	int i;
 	int cur_pos;
@@ -1264,7 +1264,7 @@ int tiffMetadataPrint(char *filename)
 	FILE *file;
 	struct tiffImageFileHeader tiff_hdr;
 	unsigned char buffer[1024];
-	struct internalStruct internal;
+	internalStruct internal;
 
 	internal.machineEndian = detectMachineEndian();
 

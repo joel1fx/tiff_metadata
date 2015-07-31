@@ -126,7 +126,7 @@ typedef struct tagString
 
 int tiffMetadataPrint(char *filename);
 int detectMachineEndian(void);
-unsigned short cSwapUShort(unsigned short a, struct internalStruct *internal);
-unsigned int cSwapUInt(unsigned int a, internalStruct *internal);
-int cSwapInt(int a, internalStruct *internal);
-float cSwapFloat(float a, internalStruct *internal);
+unsigned short cSwapUShort(unsigned short a, const internalStruct *internal);
+unsigned int cSwapUInt(unsigned int a, const internalStruct *internal);
+int cSwapInt(int a, const internalStruct *internal);
+float cSwapFloat(float a, const internalStruct *internal);
