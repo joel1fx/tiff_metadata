@@ -41,6 +41,7 @@ SOFTWARE.
 #include <stdio.h>
 #include "tiff_metadata.h"
 
+/* field types */
 typedef enum {
 	FT_UNKNOWN = 0,
 	FT_BYTE,
@@ -59,12 +60,14 @@ typedef enum {
 	FT_MAX = FT_DOUBLE,
 } fieldType_t;
 
+/* field type details lookup table entry*/
 typedef struct {
 	fieldType_t type;
 	const char *desc;
 	size_t numBytes;
 } fieldTypeData_t;
 
+/* field type details lookup table */
 static const fieldTypeData_t fieldTypeLookup[] = {
 	{ FT_BYTE, "BYTE", 1, },
 	{ FT_ASCII, "ASCII", 1, },
@@ -80,7 +83,161 @@ static const fieldTypeData_t fieldTypeLookup[] = {
 	{ FT_DOUBLE, "DOUBLE", 8, },
 };
 
+/* tag numbers */
+typedef enum {
+	NewSubfileType = 254,
+	SubfileType = 255,
+	ImageWidth = 256,
+	ImageLength = 257,
+	BitsPerSample = 258,
+	Compression = 259,
+	PhotometricInterpretation = 262,
+	Threshholding = 263,
+	CellWidth = 264,
+	CellLength = 265,
+	FillOrder = 266,
+	DocumentName = 269,
+	ImageDescription = 270,
+	Make = 271,
+	Model = 272,
+	StripOffsets = 273,
+	Orientation = 274,
+	SamplesPerPixel = 277,
+	RowsPerStrip = 278,
+	StripByteCounts = 279,
+	MinSampleValue = 280,
+	MaxSampleValue = 281,
+	XResolution = 282,
+	YResolution = 283,
+	PlanarConfiguration = 284,
+	XPosition = 286,
+	YPosition = 287,
+	FreeOffsets = 288,
+	FreeByteCounts = 289,
+	GrayResponseUnit = 290,
+	GrayResponseCurve = 291,
+	T4Options = 292,
+	T6Options = 293,
+	ResolutionUnit = 296,
+	PageNumber = 297,
+	TransferFunction = 301,
+	Software = 305,
+	DateTime = 306,
+	Artist = 315,
+	HostComputer = 316,
+	Predictor = 317,
+	WhitePoint = 318,
+	PrimaryChromaticities = 319,
+	ColorMap = 320,
+	HalftoneHints = 321,
+	TileWidth = 322,
+	TileHeight = 323,
+	TileOffsets = 324,
+	TileByteCounts = 325,
+	InkSet = 332,
+	InkNames = 333,
+	NumberOfInks = 334,
+	DotRange = 336,
+	TargetPrinter = 337,
+	ExtraSamples = 338,
+	SampleFormat = 339,
+	SMinSampleValue = 340,
+	SMaxSampleValue = 341,
+	TransferRange = 342,
+	JPEGProc = 512,
+	JPEGInterchangeFormat = 513,
+	JPEGInterchangeFormatLength = 514,
+	JPEGRestartInterval = 515,
+	JPEGLosslessPredictors = 517,
+	JPEGPointTransforms = 518,
+	JPEGQTables = 519,
+	JPEGDCTables = 520,
+	JPEGACTables = 521,
+	YCbCrCoefficients = 529,
+	YCbCrSubSampling = 530,
+	YCbCrPositioning = 531,
+	ReferenceBlackWhite = 532,
+	ExposureTime = 33434,
+	FNumber = 33437,
+	ExifIFDPointer = 34665,
+	ExposureTime2 = 34434,
+	ExposureProgram = 34850,
+	SpectralSensitivity = 34852,
+	ISOSpeedRatings = 34855,
+	OECF = 34856,
+	ExifVersion = 36864,
+	DateTimeOriginal = 36867,
+	DateTimeDigitized = 36868,
+	ComponentsConfiguration = 37121,
+	CompressedBitsPerPixel = 37122,
+	ShutterSpeedValue = 37377,
+	ApertureValue = 37378,
+	BrightnessValue = 37379,
+	ExposureBiasValue = 37380,
+	MaxApertureValue = 37381,
+	SubjectDistance = 37382,
+	MeteringMode = 37383,
+	LightSource = 37384,
+	Flash = 37385,
+	FocalLength = 37386,
+	SubjectArea = 37396,
+	MakerNote = 37500,
+	UserComment = 37510,
+	SubSecTime = 37520,
+	SubSecTimeOriginal = 37521,
+	SubSecTimeDigitized = 37522,
+	FlashpixVersion = 40960,
+	ColorSpace = 40961,
+	PixelXDimension = 40962,
+	PixelYDimension = 40963,
+	RelatedSoundFile = 40964,
+	FlashEnergy = 41483,
+	SpatialFrequencyResponse = 41484,
+	FocalPlaneXResolution = 41486,
+	FocalPlaneYResolution = 41487,
+	FocalPlaneResolutionUnit = 41488,
+	SubjectLocation = 41492,
+	ExposureIndex = 41493,
+	SensingMethod = 41495,
+	FileSource = 41728,
+	SceneType = 41729,
+	CFAPattern = 41730,
+	CustomRendered = 41985,
+	ExposureMode = 41986,
+	WhiteBalance = 41987,
+	DigitalZoomRatio = 41988,
+	FocalLengthIn35mmFilm = 41989,
+	SceneCaptureType = 41990,
+	GainControl = 41991,
+	Contrast = 41992,
+	Saturation = 41993,
+	Sharpness = 41994,
+	DeviceSettingDescription = 41995,
+	SubjectDistanceRange = 41996,
+	ImageUniqueID = 42016,
+	CameraOwnerName = 42032,
+	BodySerialNumber = 42033,
+	LensSpecification = 42034,
+	LensMake = 42035,
+	LensModel = 42036,
+	LensSerialNumber = 42037,
+} tagNum_t;
+
+
+/**                                                                      **/
+/**   macro which initializes a structure entry containing an enum and   **/
+/**   a constant string pointing to its name.                            **/
+/**                                                                      **/
+
+#define INIT_ENUM_STR(e)	{ e, #e, }
+
+
+/**                                                                      **/
+/**   macro returns the number of elements in an array.                  **/
+/**                                                                      **/
+
 #define	N_ELEMENTS(a)	(sizeof(a) / sizeof(*a))
+
 
 /**                                                                      **/
 /**   Function: detectMachineEndian                                      **/
@@ -251,144 +408,144 @@ const char *getTagDescriptor(unsigned short tag)
 {
 	unsigned int i;
 	const char *str = "unknown";
-	const tagString desc[] = {
-		{ 254, "NewSubfileType" },
-		{ 255, "SubfileType" },
-		{ 256, "ImageWidth" },
-		{ 257, "ImageLength" },
-		{ 258, "BitsPerSample" },
-		{ 259, "Compression" },
-		{ 262, "PhotometricInterpretation" },
-		{ 263, "Threshholding" },
-		{ 264, "CellWidth" },
-		{ 265, "CellLength" },
-		{ 266, "FillOrder" },
-		{ 269, "DocumentName" },
-		{ 270, "ImageDescription" },
-		{ 271, "Make" },
-		{ 272, "Model" },
-		{ 273, "StripOffsets" },
-		{ 274, "Orientation" },
-		{ 277, "SamplesPerPixel" },
-		{ 278, "RowsPerStrip" },
-		{ 279, "StripByteCounts" },
-		{ 280, "MinSampleValue" },
-		{ 281, "MaxSampleValue" },
-		{ 282, "XResolution" },
-		{ 283, "YResolution" },
-		{ 284, "PlanarConfiguration" },
-		{ 286, "XPosition" },
-		{ 287, "YPosition" },
-		{ 288, "FreeOffsets" },
-		{ 289, "FreeByteCounts" },
-		{ 290, "GrayResponseUnit" },
-		{ 291, "GrayResponseCurve" },
-		{ 292, "T4Options" },
-		{ 293, "T6Options" },
-		{ 296, "ResolutionUnit" },
-		{ 297, "PageNumber" },
-		{ 301, "TransferFunction" },
-		{ 305, "Software" },
-		{ 306, "DateTime" },
-		{ 315, "Artist" },
-		{ 316, "HostComputer" },
-		{ 317, "Predictor" },
-		{ 318, "WhitePoint" },
-		{ 319, "PrimaryChromaticities" },
-		{ 320, "ColorMap" },
-		{ 321, "HalftoneHints" },
-		{ 322, "TileWidth" },
-		{ 323, "TileHeight" },
-		{ 324, "TileOffsets" },
-		{ 325, "TileByteCounts" },
-		{ 332, "InkSet" },
-		{ 333, "InkNames" },
-		{ 334, "NumberOfInks" },
-		{ 336, "DotRange" },
-		{ 337, "TargetPrinter" },
-		{ 338, "ExtraSamples" },
-		{ 339, "SampleFormat" },
-		{ 340, "SMinSampleValue" },
-		{ 341, "SMaxSampleValue" },
-		{ 342, "TransferRange" },
-		{ 512, "JPEGProc" },
-		{ 513, "JPEGInterchangeFormat" },
-		{ 514, "JPEGInterchangeFormatLength" },
-		{ 515, "JPEGRestartInterval" },
-		{ 517, "JPEGLosslessPredictors" },
-		{ 518, "JPEGPointTransforms" },
-		{ 519, "JPEGQTables" },
-		{ 520, "JPEGDCTables" },
-		{ 521, "JPEGACTables" },
-		{ 529, "YCbCrCoefficients" },
-		{ 530, "YCbCrSubSampling" },
-		{ 531, "YCbCrPositioning" },
-		{ 532, "ReferenceBlackWhite" },
-		{ 33434, "ExposureTime" },
-		{ 33437, "FNumber" },
-		{ 34665, "ExifIFDPointer" },
-		{ 34434, "ExposureTime" },
-		{ 34850, "ExposureProgram" },
-		{ 34852, "SpectralSensitivity" },
-		{ 34855, "ISOSpeedRatings" },
-		{ 34856, "OECF" },
-		{ 36864, "ExifVersion" },
-		{ 36867, "DateTimeOriginal" },
-		{ 36868, "DateTimeDigitized" },
-		{ 37121, "ComponentsConfiguration" },
-		{ 37122, "CompressedBitsPerPixel" },
-		{ 37377, "ShutterSpeedValue" },
-		{ 37378, "ApertureValue" },
-		{ 37379, "BrightnessValue" },
-		{ 37380, "ExposureBiasValue" },
-		{ 37381, "MaxApertureValue" },
-		{ 37382, "SubjectDistance" },
-		{ 37383, "MeteringMode" },
-		{ 37384, "LightSource" },
-		{ 37385, "Flash" },
-		{ 37386, "FocalLength" },
-		{ 37396, "SubjectArea" },
-		{ 37500, "MakerNote" },
-		{ 37510, "UserComment" },
-		{ 37520, "SubSecTime" },
-		{ 37521, "SubSecTimeOriginal" },
-		{ 37522, "SubSecTimeDigitized" },
-		{ 40960, "FlashpixVersion" },
-		{ 40961, "ColorSpace" },
-		{ 40962, "PixelXDimension" },
-		{ 40963, "PixelYDimension" },
-		{ 40964, "RelatedSoundFile" },
-		{ 41483, "FlashEnergy" },
-		{ 41484, "SpatialFrequencyResponse" },
-		{ 41486, "FocalPlaneXResolution" },
-		{ 41487, "FocalPlaneYResolution" },
-		{ 41488, "FocalPlaneResolutionUnit" },
-		{ 41492, "SubjectLocation" },
-		{ 41493, "ExposureIndex" },
-		{ 41495, "SensingMethod" },
-		{ 41728, "FileSource" },
-		{ 41729, "SceneType" },
-		{ 41730, "CFAPattern" },
-		{ 41985, "CustomRendered" },
-		{ 41986, "ExposureMode" },
-		{ 41987, "WhiteBalance" },
-		{ 41988, "DigitalZoomRatio" },
-		{ 41989, "FocalLengthIn35mmFilm" },
-		{ 41990, "SceneCaptureType" },
-		{ 41991, "GainControl" },
-		{ 41992, "Contrast" },
-		{ 41993, "Saturation" },
-		{ 41994, "Sharpness" },
-		{ 41995, "DeviceSettingDescription" },
-		{ 41996, "SubjectDistanceRange" },
-		{ 42016, "ImageUniqueID" },
-		{ 42032, "CameraOwnerName" },
-		{ 42033, "BodySerialNumber" },
-		{ 42034, "LensSpecification" },
-		{ 42035, "LensMake" },
-		{ 42036, "LensModel" },
-		{ 42037, "LensSerialNumber" },
-		};
+	static const tagString desc[] = {
+		INIT_ENUM_STR(NewSubfileType),
+		INIT_ENUM_STR(SubfileType),
+		INIT_ENUM_STR(ImageWidth),
+		INIT_ENUM_STR(ImageLength),
+		INIT_ENUM_STR(BitsPerSample),
+		INIT_ENUM_STR(Compression),
+		INIT_ENUM_STR(PhotometricInterpretation),
+		INIT_ENUM_STR(Threshholding),
+		INIT_ENUM_STR(CellWidth),
+		INIT_ENUM_STR(CellLength),
+		INIT_ENUM_STR(FillOrder),
+		INIT_ENUM_STR(DocumentName),
+		INIT_ENUM_STR(ImageDescription),
+		INIT_ENUM_STR(Make),
+		INIT_ENUM_STR(Model),
+		INIT_ENUM_STR(StripOffsets),
+		INIT_ENUM_STR(Orientation),
+		INIT_ENUM_STR(SamplesPerPixel),
+		INIT_ENUM_STR(RowsPerStrip),
+		INIT_ENUM_STR(StripByteCounts),
+		INIT_ENUM_STR(MinSampleValue),
+		INIT_ENUM_STR(MaxSampleValue),
+		INIT_ENUM_STR(XResolution),
+		INIT_ENUM_STR(YResolution),
+		INIT_ENUM_STR(PlanarConfiguration),
+		INIT_ENUM_STR(XPosition),
+		INIT_ENUM_STR(YPosition),
+		INIT_ENUM_STR(FreeOffsets),
+		INIT_ENUM_STR(FreeByteCounts),
+		INIT_ENUM_STR(GrayResponseUnit),
+		INIT_ENUM_STR(GrayResponseCurve),
+		INIT_ENUM_STR(T4Options),
+		INIT_ENUM_STR(T6Options),
+		INIT_ENUM_STR(ResolutionUnit),
+		INIT_ENUM_STR(PageNumber),
+		INIT_ENUM_STR(TransferFunction),
+		INIT_ENUM_STR(Software),
+		INIT_ENUM_STR(DateTime),
+		INIT_ENUM_STR(Artist),
+		INIT_ENUM_STR(HostComputer),
+		INIT_ENUM_STR(Predictor),
+		INIT_ENUM_STR(WhitePoint),
+		INIT_ENUM_STR(PrimaryChromaticities),
+		INIT_ENUM_STR(ColorMap),
+		INIT_ENUM_STR(HalftoneHints),
+		INIT_ENUM_STR(TileWidth),
+		INIT_ENUM_STR(TileHeight),
+		INIT_ENUM_STR(TileOffsets),
+		INIT_ENUM_STR(TileByteCounts),
+		INIT_ENUM_STR(InkSet),
+		INIT_ENUM_STR(InkNames),
+		INIT_ENUM_STR(NumberOfInks),
+		INIT_ENUM_STR(DotRange),
+		INIT_ENUM_STR(TargetPrinter),
+		INIT_ENUM_STR(ExtraSamples),
+		INIT_ENUM_STR(SampleFormat),
+		INIT_ENUM_STR(SMinSampleValue),
+		INIT_ENUM_STR(SMaxSampleValue),
+		INIT_ENUM_STR(TransferRange),
+		INIT_ENUM_STR(JPEGProc),
+		INIT_ENUM_STR(JPEGInterchangeFormat),
+		INIT_ENUM_STR(JPEGInterchangeFormatLength),
+		INIT_ENUM_STR(JPEGRestartInterval),
+		INIT_ENUM_STR(JPEGLosslessPredictors),
+		INIT_ENUM_STR(JPEGPointTransforms),
+		INIT_ENUM_STR(JPEGQTables),
+		INIT_ENUM_STR(JPEGDCTables),
+		INIT_ENUM_STR(JPEGACTables),
+		INIT_ENUM_STR(YCbCrCoefficients),
+		INIT_ENUM_STR(YCbCrSubSampling),
+		INIT_ENUM_STR(YCbCrPositioning),
+		INIT_ENUM_STR(ReferenceBlackWhite),
+		INIT_ENUM_STR(ExposureTime),
+		INIT_ENUM_STR(FNumber),
+		INIT_ENUM_STR(ExifIFDPointer),
+		INIT_ENUM_STR(ExposureTime2),
+		INIT_ENUM_STR(ExposureProgram),
+		INIT_ENUM_STR(SpectralSensitivity),
+		INIT_ENUM_STR(ISOSpeedRatings),
+		INIT_ENUM_STR(OECF),
+		INIT_ENUM_STR(ExifVersion),
+		INIT_ENUM_STR(DateTimeOriginal),
+		INIT_ENUM_STR(DateTimeDigitized),
+		INIT_ENUM_STR(ComponentsConfiguration),
+		INIT_ENUM_STR(CompressedBitsPerPixel),
+		INIT_ENUM_STR(ShutterSpeedValue),
+		INIT_ENUM_STR(ApertureValue),
+		INIT_ENUM_STR(BrightnessValue),
+		INIT_ENUM_STR(ExposureBiasValue),
+		INIT_ENUM_STR(MaxApertureValue),
+		INIT_ENUM_STR(SubjectDistance),
+		INIT_ENUM_STR(MeteringMode),
+		INIT_ENUM_STR(LightSource),
+		INIT_ENUM_STR(Flash),
+		INIT_ENUM_STR(FocalLength),
+		INIT_ENUM_STR(SubjectArea),
+		INIT_ENUM_STR(MakerNote),
+		INIT_ENUM_STR(UserComment),
+		INIT_ENUM_STR(SubSecTime),
+		INIT_ENUM_STR(SubSecTimeOriginal),
+		INIT_ENUM_STR(SubSecTimeDigitized),
+		INIT_ENUM_STR(FlashpixVersion),
+		INIT_ENUM_STR(ColorSpace),
+		INIT_ENUM_STR(PixelXDimension),
+		INIT_ENUM_STR(PixelYDimension),
+		INIT_ENUM_STR(RelatedSoundFile),
+		INIT_ENUM_STR(FlashEnergy),
+		INIT_ENUM_STR(SpatialFrequencyResponse),
+		INIT_ENUM_STR(FocalPlaneXResolution),
+		INIT_ENUM_STR(FocalPlaneYResolution),
+		INIT_ENUM_STR(FocalPlaneResolutionUnit),
+		INIT_ENUM_STR(SubjectLocation),
+		INIT_ENUM_STR(ExposureIndex),
+		INIT_ENUM_STR(SensingMethod),
+		INIT_ENUM_STR(FileSource),
+		INIT_ENUM_STR(SceneType),
+		INIT_ENUM_STR(CFAPattern),
+		INIT_ENUM_STR(CustomRendered),
+		INIT_ENUM_STR(ExposureMode),
+		INIT_ENUM_STR(WhiteBalance),
+		INIT_ENUM_STR(DigitalZoomRatio),
+		INIT_ENUM_STR(FocalLengthIn35mmFilm),
+		INIT_ENUM_STR(SceneCaptureType),
+		INIT_ENUM_STR(GainControl),
+		INIT_ENUM_STR(Contrast),
+		INIT_ENUM_STR(Saturation),
+		INIT_ENUM_STR(Sharpness),
+		INIT_ENUM_STR(DeviceSettingDescription),
+		INIT_ENUM_STR(SubjectDistanceRange),
+		INIT_ENUM_STR(ImageUniqueID),
+		INIT_ENUM_STR(CameraOwnerName),
+		INIT_ENUM_STR(BodySerialNumber),
+		INIT_ENUM_STR(LensSpecification),
+		INIT_ENUM_STR(LensMake),
+		INIT_ENUM_STR(LensModel),
+		INIT_ENUM_STR(LensSerialNumber),
+	};
 
 	/* TODO: Add more efficient search algorithm. */
 
@@ -426,368 +583,84 @@ const char *getTIFFValueDesc(unsigned short tag, unsigned int value)
 	/* affected only by the tag and buffers affected by both the   */
 	/* tag and value.                                              */
 
-	switch(tag)
+	typedef struct {
+		unsigned short tag;
+		int checkValue;
+		unsigned int value;
+		const char *desc;
+	} lookup_t;
+
+	static const lookup_t lookup[] = {
+		{ NewSubfileType, 0, 0, "", },
+		{ ImageWidth, 0, 0, "pixels", },
+		{ ImageLength, 0, 0, "pixels", },
+		{ BitsPerSample, 0, 0, "", },
+		{ Compression, 1, 1, "No compression", },
+		{ Compression, 1, 2, "CCITT Group 3 compression", },
+		{ Compression, 1, 5, "LZW compression", },
+		{ Compression, 1, 32773, "PackBits compression", },
+		{ Compression, 0, 0, "", },
+		{ PhotometricInterpretation, 1, 0, "WhiteIsZero", },
+		{ PhotometricInterpretation, 1, 1, "BlackIsZero", },
+		{ PhotometricInterpretation, 1, 2, "RGB", },
+		{ PhotometricInterpretation, 1, 3, "Palette color", },
+		{ PhotometricInterpretation, 1, 4, "Transparency mask", },
+		{ PhotometricInterpretation, 0, 0, "", },
+		{ StripOffsets, 0, 0, "", },
+		{ Orientation, 1, 1, "Row0:top,Col0:left", },
+		{ Orientation, 1, 2, "Row0:top,Col0:right", },
+		{ Orientation, 1, 3, "Row0:bottom,Col0:right", },
+		{ Orientation, 1, 4, "Row0:bottom,Col0:left", },
+		{ Orientation, 1, 5, "Row0:left,Col0:top", },
+		{ Orientation, 1, 6, "Row0:right,Col0:top", },
+		{ Orientation, 1, 7, "Row0:right,Col0:bottom", },
+		{ Orientation, 1, 8, "Row0:left,Col0:bottom", },
+		{ Orientation, 0, 0, "", },
+		{ SamplesPerPixel, 0, 0, "", },
+		{ RowsPerStrip, 0, 0, "", },
+		{ StripByteCounts, 0, 0, "", },
+		{ PlanarConfiguration, 1, 1, "Chunky", },
+		{ PlanarConfiguration, 1, 2, "Planar", },
+		{ PlanarConfiguration, 0, 0, "", },
+		{ ResolutionUnit, 1, 1, "No absolute unit", },
+		{ ResolutionUnit, 1, 2, "Inch", },
+		{ ResolutionUnit, 1, 3, "Centimeter", },
+		{ ResolutionUnit, 0, 0, "", },
+		{ Software, 0, 0, "", },
+		{ Predictor, 1, 1, "No prediction scheme", },
+		{ Predictor, 1, 2, "Horizontal differencing", },
+		{ Predictor, 0, 0, "", },
+		{ SampleFormat, 1, 1, "Unsigned integer data", },
+		{ SampleFormat, 1, 2, "Two's compliment signed integer data", },
+		{ SampleFormat, 1, 3, "IEEE floating point data", },
+		{ SampleFormat, 1, 4, "Undefined data format", },
+		{ SampleFormat, 0, 0, "", },
+		{ ExposureTime, 0, 0, "seconds", },
+		{ ExposureProgram, 1, 0, "Not defined", },
+		{ ExposureProgram, 1, 1, "Manual", },
+		{ ExposureProgram, 1, 2, "Normal program", },
+		{ ExposureProgram, 1, 3, "Aperture priority", },
+		{ ExposureProgram, 1, 4, "Shutter priority", },
+		{ ExposureProgram, 1, 5, "Creative program", },
+		{ ExposureProgram, 1, 6, "Action program", },
+		{ ExposureProgram, 1, 7, "Portrait mode", },
+		{ ExposureProgram, 1, 8, "Landscape mode", },
+		{ ExposureProgram, 0, 0, "", },
+		{ FocalPlaneResolutionUnit, 1, 1, "No absolute unit", },
+		{ FocalPlaneResolutionUnit, 1, 2, "Inch", },
+		{ FocalPlaneResolutionUnit, 1, 3, "Centimeter", },
+		{ FocalPlaneResolutionUnit, 0, 0, "", },
+	};
+	const lookup_t *p;
+	unsigned int i;
+
+	for (i = 0, p = lookup; i < N_ELEMENTS(lookup); i++, p++)
 	{
-		case 254: /* NewSubfileType */
+		if (tag == p->tag && (p->checkValue == 0 || value == p->value))
 		{
-			str = "";
+			str = p->desc;
 			break;
 		}
-		case 256: /* ImageWidth */
-		{
-			str = "pixels";
-			break;
-		}
-		case 257: /* ImageLength */
-		{
-			str = "pixels";
-			break;
-		}
-		case 258: /* BitsPerSample */
-		{
-			str = "";
-			break;
-		}
-		case 259: /* Compression */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "No compression";
-					break;
-				}
-				case 2:
-				{
-					str = "CCITT Group 3 compression";
-					break;
-				}
-				case 5:
-				{
-					str = "LZW compression";
-					break;
-				}
-				case 32773:
-				{
-					str = "PackBits compression";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 262: /* PhotometricInterpretation */
-		{
-			switch(value)
-			{
-				case 0:
-				{
-					str = "WhiteIsZero";
-					break;
-				}
-				case 1:
-				{
-					str = "BlackIsZero";
-					break;
-				}
-				case 2:
-				{
-					str = "RGB";
-					break;
-				}
-				case 3:
-				{
-					str = "Palette color";
-					break;
-				}
-				case 4:
-				{
-					str = "Transparency mask";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 273: /* StripOffsets */
-		{
-			str = "";
-			break;
-		}
-		case 274: /* Orientation */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "Row0:top,Col0:left";
-					break;
-				}
-				case 2:
-				{
-					str = "Row0:top,Col0:right";
-					break;
-				}
-				case 3:
-				{
-					str = "Row0:bottom,Col0:right";
-					break;
-				}
-				case 4:
-				{
-					str = "Row0:bottom,Col0:left";
-					break;
-				}
-				case 5:
-				{
-					str = "Row0:left,Col0:top";
-					break;
-				}
-				case 6:
-				{
-					str = "Row0:right,Col0:top";
-					break;
-				}
-				case 7:
-				{
-					str = "Row0:right,Col0:bottom";
-					break;
-				}
-				case 8:
-				{
-					str = "Row0:left,Col0:bottom";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 277: /* SamplesPerPixel */
-		{
-			str = "";
-			break;
-		}
-		case 278: /* RowsPerStrip */
-		{
-			str = "";
-			break;
-		}
-		case 279: /* StripByteCounts */
-		{
-			str = "";
-			break;
-		}
-		case 284: /* PlanarConfiguration */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "Chunky";
-					break;
-				}
-				case 2:
-				{
-					str = "Planar";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 296: /* ResolutionUnit */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "No absolute unit";
-					break;
-				}
-				case 2:
-				{
-					str = "Inch";
-					break;
-				}
-				case 3:
-				{
-					str = "Centimeter";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 305: /* Software */
-		{
-			str = "";
-			break;
-		}
-		case 317: /* Predictor */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "No prediction scheme";
-					break;
-				}
-				case 2:
-				{
-					str = "Horizontal differencing";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 339: /* SampleFormat */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "Unsigned integer data";
-					break;
-				}
-				case 2:
-				{
-					str = "Two's compliment signed integer data";
-					break;
-				}
-				case 3:
-				{
-					str = "IEEE floating point data";
-					break;
-				}
-				case 4:
-				{
-					str = "Undefined data format";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 33434: /* Exif ExposureTime */
-		{
-			str = "seconds";
-			break;
-		}
-		case 34850: /* Exif ExposureProgram */
-		{
-			switch(value)
-			{
-				case 0:
-				{
-					str = "Not defined";
-					break;
-				}
-				case 1:
-				{
-					str = "Manual";
-					break;
-				}
-				case 2:
-				{
-					str = "Normal program";
-					break;
-				}
-				case 3:
-				{
-					str = "Aperture priority";
-					break;
-				}
-				case 4:
-				{
-					str = "Shutter priority";
-					break;
-				}
-				case 5:
-				{
-					str = "Creative program";
-					break;
-				}
-				case 6:
-				{
-					str = "Action program";
-					break;
-				}
-				case 7:
-				{
-					str = "Portrait mode";
-					break;
-				}
-				case 8:
-				{
-					str = "Landscape mode";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		case 41488: /* Exif FocalPlaneResolutionUnit */
-		{
-			switch(value)
-			{
-				case 1:
-				{
-					str = "No absolute unit";
-					break;
-				}
-				case 2:
-				{
-					str = "Inch";
-					break;
-				}
-				case 3:
-				{
-					str = "Centimeter";
-					break;
-				}
-				default:
-				{
-					str = "";
-					break;
-				}
-			}
-			break;
-		}
-		default:
-			break;
 	}
 
 	return str;
@@ -878,6 +751,8 @@ void printEntry(const unsigned char *buffer, unsigned short tag,
 	int snumerator, sdenominator;
 	double result;
 
+	size_t numBytes = getFieldTypeNumBytes(fieldType);
+
 	switch(fieldType)
 	{
 		case FT_ASCII:
@@ -895,8 +770,7 @@ void printEntry(const unsigned char *buffer, unsigned short tag,
 		}
 		case FT_SHORT:
 		{
-			tmp.b[0] = buffer[0];
-			tmp.b[1] = buffer[1];
+			memcpy(tmp.b, buffer, numBytes);
 
 			tmp.s = cSwapUShort(tmp.s, internal);
 
@@ -907,10 +781,7 @@ void printEntry(const unsigned char *buffer, unsigned short tag,
 		}
 		case FT_LONG:
 		{
-			tmp.b[0] = buffer[0];
-			tmp.b[1] = buffer[1];
-			tmp.b[2] = buffer[2];
-			tmp.b[3] = buffer[3];
+			memcpy(tmp.b, buffer, numBytes);
 
 			tmp.u = cSwapUInt(tmp.u, internal);
 
@@ -921,15 +792,9 @@ void printEntry(const unsigned char *buffer, unsigned short tag,
 		}
 		case FT_RATIONAL:
 		{
-			tmp.b[0] = buffer[0];
-			tmp.b[1] = buffer[1];
-			tmp.b[2] = buffer[2];
-			tmp.b[3] = buffer[3];
+			memcpy(tmp.b, buffer, numBytes / 2);
 			numerator = cSwapUInt(tmp.u, internal);
-			tmp.b[0] = buffer[4];
-			tmp.b[1] = buffer[5];
-			tmp.b[2] = buffer[6];
-			tmp.b[3] = buffer[7];
+			memcpy(tmp.b, buffer + numBytes / 2, numBytes / 2);
 			denominator = cSwapUInt(tmp.u, internal);
 
 			result = (double)numerator/(double)denominator;
@@ -941,15 +806,9 @@ void printEntry(const unsigned char *buffer, unsigned short tag,
 		}
 		case FT_SRATIONAL:
 		{
-			tmp.b[0] = buffer[0];
-			tmp.b[1] = buffer[1];
-			tmp.b[2] = buffer[2];
-			tmp.b[3] = buffer[3];
+			memcpy(tmp.b, buffer, numBytes / 2);
 			snumerator = cSwapInt(tmp.u, internal);
-			tmp.b[0] = buffer[4];
-			tmp.b[1] = buffer[5];
-			tmp.b[2] = buffer[6];
-			tmp.b[3] = buffer[7];
+			memcpy(tmp.b, buffer + numBytes / 2, numBytes / 2);
 			sdenominator = cSwapInt(tmp.u, internal);
 
 			result = (double)snumerator/(double)sdenominator;
