@@ -1,4 +1,3 @@
-
 # 
 # The MIT License (MIT)
 # 
@@ -23,23 +22,26 @@
 # SOFTWARE.
 #
 
-CC=cc
-CFLAGS=-c -Wall -I.
+LIB_OBJS=tiff_metadata.o
+TIFF_METADATA_OBJS=main.o
+TEST_OBJS=test.o
+ALL_OBJS=$(LIB_OBJS) $(TIFF_METADATA_OBJS) $(TEST_OBJS)
+H_SRCS=tiff_metadata.h
+BINS=tiff_metadata test
 
-tiff_metadata: tiff_metadata.o main.o
-	$(CC) tiff_metadata.o main.o -o tiff_metadata
+CFLAGS=-Wall
 
-tiff_metadata.o: tiff_metadata.c tiff_metadata.h
-	$(CC) $(CFLAGS) tiff_metadata.c
+tiff_metadata: $(TIFF_METADATA_OBJS) $(LIB_OBJS)
+	$(CC) -o $@ $^
 
-main.o: main.c tiff_metadata.h
-	$(CC) $(CFLAGS) main.c
+test: $(TEST_OBJS) $(LIB_OBJS)
+	$(CC) -o $@ $^
 
-test: test.o tiff_metadata.o
+.PHONY: all
+all: $(BINS)
 
-test.o: test.c tiff_metadata.h
-	$(CC) $(CFLAGS) test.c
+$(ALL_OBJS): $(H_SRCS)
 
+.PHONY: clean
 clean:
-	rm *.o
-
+	$(RM) $(ALL_OBJS)
