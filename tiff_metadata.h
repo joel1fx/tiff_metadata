@@ -119,3 +119,14 @@ typedef struct tagString
 	char *string;
 } tagString;
 
+
+/**                                                                      **/
+/**  Library API function declarations                                   **/
+/**                                                                      **/
+
+int tiffMetadataPrint(char *filename);
+int detectMachineEndian(void);
+unsigned short cSwapUShort(unsigned short a, struct internalStruct *internal);
+unsigned int cSwapUInt(unsigned int a, internalStruct *internal);
+int cSwapInt(int a, internalStruct *internal);
+float cSwapFloat(float a, internalStruct *internal);
