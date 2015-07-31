@@ -27,6 +27,8 @@ TIFF_METADATA_OBJS=main.o
 TEST_OBJS=test.o
 ALL_OBJS=$(LIB_OBJS) $(TIFF_METADATA_OBJS) $(TEST_OBJS)
 H_SRCS=tiff_metadata.h
+C_SRCS=tiff_metadata.c main.c test.c
+CSCOPE_OUT=cscope.out
 BINS=tiff_metadata test
 
 CFLAGS=-Wall
@@ -44,4 +46,10 @@ $(ALL_OBJS): $(H_SRCS)
 
 .PHONY: clean
 clean:
-	$(RM) $(ALL_OBJS)
+	$(RM) $(ALL_OBJS) $(CSCOPE_OUT)
+
+$(CSCOPE_OUT): $(H_SRCS) $(C_SRCS)
+	cscope -b $(C_SRCS)
+
+.PHONY: cscope
+cscope: $(CSCOPE_OUT)
