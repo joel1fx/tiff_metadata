@@ -4,5 +4,6 @@
 # compiler derived files
 *.o
 # derived files
+cscope.out
 test
 tiff_metadata
