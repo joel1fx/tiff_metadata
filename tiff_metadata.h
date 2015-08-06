@@ -28,14 +28,32 @@ SOFTWARE.
 /**                                                                      **/
 /**   http://partners.adobe.com/public/developer/en/tiff/TIFF6.pdf       **/
 /**                                                                      **/
+/**   The Exif file format specifcations are available at                **/
+/**                                                                      **/
+/**   http://www.exiv2.org/Exif2-2.PDF                                   **/
+/**   http://www.cipa.jp/std/documents/e/DC-008-2012_E.pdf               **/
+/**                                                                      **/
+
+
+#ifndef _TIFF_METADATA_H
+#define _TIFF_METADATA_H
+
+#ifdef MAIN
+#ifndef EXTERN
+#define EXTERN
+#endif
+#else
+#ifndef EXTERN
+#define EXTERN extern
+#endif
+#endif
+
+# define TIFF_MAGIC 42
 
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
-
-
-# define TIFF_MAGIC 42
 
 
 /**                                                                      **/
@@ -118,4 +136,31 @@ typedef struct tagString
 	int tag;
 	char *string;
 } tagString;
+
+
+/**                                                                      **/
+/**    External declarations                                             **/
+/**                                                                      **/
+
+EXTERN int detectMachineEndian(void);
+EXTERN unsigned short cSwapUShort(unsigned short a,
+	struct internalStruct *internal);
+EXTERN unsigned int cSwapUInt(unsigned int a, internalStruct *internal);
+EXTERN int cSwapInt(int a, internalStruct *internal);
+EXTERN float cSwapFloat(float a, internalStruct *internal);
+EXTERN void getTagDescriptor(char *buffer, unsigned short tag);
+EXTERN void getTIFFValueDesc(char *buffer, unsigned short tag,
+	unsigned int value);
+EXTERN int getFieldTypeNumBytes(unsigned short fieldType);
+EXTERN void getTIFFTypeDesc(char *buffer, unsigned short fieldType);
+EXTERN void printEntry(unsigned char *buffer, unsigned short tag,
+        unsigned short fieldType, internalStruct *internal);
+EXTERN void printDump(unsigned char *buffer, int count);
+EXTERN void getOffsetValues(FILE *file, unsigned short tag,
+        unsigned short fieldType, unsigned int count,
+        unsigned int valueOffset, internalStruct *internal);
+EXTERN void tiffIFDPrint(char *filename, FILE *file, internalStruct *internal);
+EXTERN int tiffMetadataPrint(char *filename);
+
+#endif
 
