@@ -1,0 +1,23 @@
+# Adapted from                            #
+# https://gist.github.com/octocat/9257657 #
+###########################################
+
+# Compilied source #
+####################
+*.o
+*.so
+
+# Packages #
+############
+*.dmg
+*.gz
+*.jar
+*.tar
+*.zip
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Trashes
