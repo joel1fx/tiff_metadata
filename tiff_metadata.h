@@ -116,6 +116,17 @@ typedef union byte4
 typedef struct tagString
 {
 	int tag;
-	char *string;
+	const char *string;
 } tagString;
 
+
+/**                                                                      **/
+/**  Library API function declarations                                   **/
+/**                                                                      **/
+
+int tiffMetadataPrint(const char *filename);
+int detectMachineEndian(void);
+unsigned short cSwapUShort(unsigned short a, const internalStruct *internal);
+unsigned int cSwapUInt(unsigned int a, const internalStruct *internal);
+int cSwapInt(int a, const internalStruct *internal);
+float cSwapFloat(float a, const internalStruct *internal);
